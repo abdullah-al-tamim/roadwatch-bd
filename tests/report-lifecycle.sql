@@ -1,0 +1,11 @@
+begin;
+insert into auth.users(id,email) values ('10000000-0000-0000-0000-000000000001','roadwatch-test1@example.invalid'),('10000000-0000-0000-0000-000000000002','roadwatch-test2@example.invalid');
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated","is_anonymous":false}',true);
+set local role authenticated;
+insert into public.incidents(category,author_id,longitude,latitude,description) values(4,'10000000-0000-0000-0000-000000000001',90.4,23.8,'TRANSACTION TEST — rolled back');
+reset role;
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated","is_anonymous":false}',true);
+set local role authenticated;
+insert into public.confirmations(incident_id,user_id,kind) select id,'10000000-0000-0000-0000-000000000002','flag' from public.incidents where description='TRANSACTION TEST — rolled back';
+select status='disputed' as dispute_passed from public.incidents where description='TRANSACTION TEST — rolled back';
+rollback;
